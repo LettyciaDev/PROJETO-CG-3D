@@ -43,3 +43,23 @@ scene.add(dirLight2);
 
 // Atualizar no loop de animação:
 // controls.update();
+
+const PALETTES = {
+  standard: { U: 0xffffff, D: 0xffd500, L: 0xff5800, R: 0xb71234, F: 0x009b48, B: 0x0046ad },
+  neon:     { U: 0xffffff, D: 0xffff00, L: 0xff007f, R: 0xff3300, F: 0x00ff66, B: 0x00ffff },
+  pastel:   { U: 0xf0f0f0, D: 0xffeab0, L: 0xffb3ba, R: 0xffdfba, F: 0xbaffc9, B: 0xbae1ff }
+};
+
+let currentPalette = PALETTES.standard;
+
+function getFaceMaterials(palette) {
+  // Ordem dos materiais no BoxGeometry: +X, -X, +Y, -Y, +Z, -Z
+  return [
+    new THREE.MeshStandardMaterial({ color: palette.R, roughness: 0.3 }), // Right
+    new THREE.MeshStandardMaterial({ color: palette.L, roughness: 0.3 }), // Left
+    new THREE.MeshStandardMaterial({ color: palette.U, roughness: 0.3 }), // Up
+    new THREE.MeshStandardMaterial({ color: palette.D, roughness: 0.3 }), // Down
+    new THREE.MeshStandardMaterial({ color: palette.F, roughness: 0.3 }), // Front
+    new THREE.MeshStandardMaterial({ color: palette.B, roughness: 0.3 })  // Back
+  ];
+}
