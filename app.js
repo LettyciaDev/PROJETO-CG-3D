@@ -63,3 +63,32 @@ function getFaceMaterials(palette) {
     new THREE.MeshStandardMaterial({ color: palette.B, roughness: 0.3 })  // Back
   ];
 }
+
+const CUBE_SIZE = 1;
+const CUBE_GAP = 0.05;
+const OFFSET = CUBE_SIZE + CUBE_GAP;
+
+const cubeGroup = new THREE.Group();
+scene.add(cubeGroup);
+
+const cubies = [];
+
+function createRubiksCube() {
+  const geometry = new THREE.BoxGeometry(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE);
+  const materials = getFaceMaterials(currentPalette);
+
+  for (let x = -1; x <= 1; x++) {
+    for (let y = -1; y <= 1; y++) {
+      for (let z = -1; z <= 1; z++) {
+        const cubie = new THREE.Mesh(geometry, materials);
+        cubie.position.set(x * OFFSET, y * OFFSET, z * OFFSET);
+        cubie.userData = { initialPos: new THREE.Vector3(x * OFFSET, y * OFFSET, z * OFFSET) };
+        
+        cubeGroup.add(cubie);
+        cubies.push(cubie);
+      }
+    }
+  }
+}
+
+createRubiksCube();
