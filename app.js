@@ -23,3 +23,23 @@ window.addEventListener('resize', () => {
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
+
+// Adicionar OrbitControls
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+
+// Iluminação
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+scene.add(ambientLight);
+
+const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.8);
+dirLight1.position.set(10, 20, 15);
+scene.add(dirLight1);
+
+const dirLight2 = new THREE.DirectionalLight(0xffffff, 0.3);
+dirLight2.position.set(-10, -10, -10);
+scene.add(dirLight2);
+
+// Atualizar no loop de animação:
+// controls.update();
