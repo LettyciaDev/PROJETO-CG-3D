@@ -110,3 +110,57 @@ function getCubiesForFace(face) {
     }
   });
 }
+
+let isAnimating = false;
+
+function rotateFace(face, angle = Math.PI / 2, duration = 300, onComplete = null) {
+  if (isAnimating) return;
+  isAnimating = true;
+
+  const faceCubies = getCubiesForFace(face);
+  const pivot = new THREE.Group();
+  scene.add(pivot);
+
+  // Anexa cubinhos ao pivô mantendo transformações
+  faceCubies.forEach(cubie => pivot.attach(cubie));
+
+  const axisMap = {
+    U: new THREE.Vector3(0, 1, 0), D: new THREE.Vector3(0, -1, 0),
+    R: new THREE.Vector3(1, 0, 0), L: new THREE.Vector3(-1, 0, 0),
+    F: new THREE.Vector3(0, 0, 1), B: new THREE.Vector3(0, 0, -1)
+  };
+
+  const axis = axisMap[face];
+  let startTime = null;
+
+  function animateRotation(timestamp) {
+    if (!startTime) startTime = timestamp;
+    const progress = Math.min((timestamp - startTime) / duration, 1);
+    
+    // Interpolação suave (easeOutQuad)
+    const easedProgress = progress * (2 - progress);
+    pivot.setRotationFromAxisAngle(axis, angle * easedProgress);
+
+    if (progress < 1) {
+      requestAnimationFrame(animateRotation);
+    } else {
+      pivot.setRotationFromAxisAngle(axis, angle);
+      pivot.updateMatrixWorld();
+
+      // Devolve cubinhos para a cena raiz e limpa o pivô
+      faceCubies.forEach(cubie => {
+        cubeGroup.attach(cubie);
+        // Ajuste de precisão para evitar arredondamentos numéricos
+        cubie.position.x = Math.round(cubie.position.x / OFFSET) * OFFSET;
+        cubie.position.y = Math.round(cubie.position.y / OFFSET) * OFFSET;
+        cubie.position.z = Math.round(cubie.position.z / OFFSET) * OFFSET;
+      });
+
+      scene.remove(pivot);
+      isAnimating = false;
+      if (onComplete) onComplete();
+    }
+  }
+
+  requestAnimationFrame(animateRotation);
+}
