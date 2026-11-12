@@ -92,3 +92,21 @@ function createRubiksCube() {
 }
 
 createRubiksCube();
+
+function getCubiesForFace(face) {
+  const threshold = OFFSET * 0.5;
+  return cubies.filter(cubie => {
+    const pos = new THREE.Vector3();
+    cubie.getWorldPosition(pos);
+    
+    switch (face) {
+      case 'U': return pos.y > threshold;
+      case 'D': return pos.y < -threshold;
+      case 'R': return pos.x > threshold;
+      case 'L': return pos.x < -threshold;
+      case 'F': return pos.z > threshold;
+      case 'B': return pos.z < -threshold;
+      default: return false;
+    }
+  });
+}
