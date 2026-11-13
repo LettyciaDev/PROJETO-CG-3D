@@ -47,12 +47,12 @@ dirLight2.position.set(-10, -10, -10);
 scene.add(dirLight2);
 
 // Atualizar no loop de animação:
-// controls.update();
+controls.update();
 
 const PALETTES = {
   standard: {
     U: 0xffffff,
-    D: 0xffd500,
+    D: 0xffd500, 
     L: 0xff5800,
     R: 0xb71234,
     F: 0x009b48,
@@ -109,7 +109,7 @@ function createRubiksCube() {
         const cubie = new THREE.Mesh(geometry, materials);
         cubie.position.set(x * OFFSET, y * OFFSET, z * OFFSET);
         cubie.userData = {
-          initialPos: new THREE.Vector3(x * OFFSET, y`` * OFFSET, z * OFFSET),
+          initialPos: new THREE.Vector3(x * OFFSET, y * OFFSET, z * OFFSET),
         };
 
         cubeGroup.add(cubie);
@@ -217,4 +217,24 @@ function makeMove(face) {
     document.getElementById("move-count").innerText = moveCount;
     checkWinCondition();
   });
+}
+
+function scrambleCube(numMoves = 15) {
+  if (isAnimating) return;
+  const faces = ["U", "D", "L", "R", "F", "B"];
+  let currentMove = 0;
+
+  function executeNextScrambleMove() {
+    if (currentMove < numMoves) {
+      const randomFace = faces[Math.floor(Math.random() * faces.length)];
+      rotateFace(randomFace, Math.PI / 2, 100, () => {
+        currentMove++;
+        executeNextScrambleMove();
+      });
+    } else {
+      moveCount = 0;
+      document.getElementById("move-count").innerText = moveCount;
+    }
+  }
+  executeNextScrambleMove();
 }
