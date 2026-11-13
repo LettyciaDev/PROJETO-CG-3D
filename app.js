@@ -52,7 +52,7 @@ controls.update();
 const PALETTES = {
   standard: {
     U: 0xffffff,
-    D: 0xffd500, 
+    D: 0xffd500,
     L: 0xff5800,
     R: 0xb71234,
     F: 0x009b48,
@@ -237,4 +237,24 @@ function scrambleCube(numMoves = 15) {
     }
   }
   executeNextScrambleMove();
+}
+
+function checkWinCondition() {
+  if (moveCount === 0) return;
+  const isSolved = cubies.every((cubie) => {
+    //verifica alinhamento de orientação dos cubies
+    const q = cubie.quaternion;
+    const isOriented =
+      Math.abs(q.w) > 0.99 ||
+      Math.abs(q.x) > 0.99 ||
+      Math.abs(q.y) > 0.99 ||
+      Math.abs(q.z) > 0.99;
+
+    return isOriented;
+  });
+  if (isSolved) {
+    setTimeout(() => {
+      alert(`Parabéns você resolveu o cubo mágico em ${moveCount} movimentos!`);
+    }, 100);
+  }
 }
