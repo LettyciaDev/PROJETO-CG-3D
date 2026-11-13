@@ -25,6 +25,45 @@
   </head>
   <body>
     <div id="canvas-container"></div>
+    <style>
+      #ui-container {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        z-index: 10;
+        color: white;
+      }
+
+      #stats {
+        margin-bottom: 15px;
+        font-size: 18px;
+      }
+
+      #controls-panel {
+        display: flex;
+        gap: 8px;
+      }
+
+      #controls-panel button {
+        padding: 12px 18px;
+        cursor: pointer;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+      }
+    </style>
+    <!-- Adicionado ao index.html -->
+    <div id="ui-container">
+      <div id="stats">Movimentos: <span id="move-count">0</span></div>
+      <div id="controls-panel">
+        <button onclick="makeMove('U')">U</button>
+        <button onclick="makeMove('D')">D</button>
+        <button onclick="makeMove('L')">L</button>
+        <button onclick="makeMove('R')">R</button>
+        <button onclick="makeMove('F')">F</button>
+        <button onclick="makeMove('B')">B</button>
+      </div>
+    </div>
 
     <!-- Three.js e OrbitControls -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
