@@ -268,3 +268,12 @@ function changeTheme(themeName) {
     cubie.material = newMaterials;
   });
 }
+
+window.addEventListener('keydown', (e) => {
+  const key = e.key.toUpperCase();
+  if (['U', 'D', 'L', 'R', 'F', 'B'].includes(key)) {
+    makeMove(key);
+  }
+});
+
+console.log("Cubo Mágico 3D Three.js inicializado com sucesso!");
