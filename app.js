@@ -258,3 +258,13 @@ function checkWinCondition() {
     }, 100);
   }
 }
+
+function changeTheme(themeName) {
+  if (!PALETTES[themeName]) return;
+  currentPalette = PALETTES[themeName];
+  const newMaterials = getFaceMaterials(currentPalette);
+
+  cubies.forEach(cubie => {
+    cubie.material = newMaterials;
+  });
+}
