@@ -1,8 +1,7 @@
-// app.js - Inicialização
 const container = document.getElementById("canvas-container");
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x1a1a24);
+scene.background = new THREE.Color(0x0a0e17);
 
 const camera = new THREE.PerspectiveCamera(
   45,
@@ -10,18 +9,12 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   1000,
 );
-camera.position.set(6, 6, 8);
+camera.position.set(6, 5.5, 8);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
 container.appendChild(renderer.domElement);
-
-function animate() {
-  requestAnimationFrame(animate);
-  renderer.render(scene, camera);
-}
-animate();
 
 window.addEventListener("resize", () => {
   camera.aspect = window.innerWidth / window.innerHeight;
@@ -29,14 +22,16 @@ window.addEventListener("resize", () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-// Adicionar OrbitControls
+// Câmera: órbita com o mouse
 const controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.05;
+controls.enablePan = false;
+controls.minDistance = 6;
+controls.maxDistance = 20;
 
 // Iluminação
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
-scene.add(ambientLight);
+scene.add(new THREE.AmbientLight(0xffffff, 0.7));
 
 const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.8);
 dirLight1.position.set(10, 20, 15);
@@ -46,8 +41,12 @@ const dirLight2 = new THREE.DirectionalLight(0xffffff, 0.3);
 dirLight2.position.set(-10, -10, -10);
 scene.add(dirLight2);
 
-// Atualizar no loop de animação:
-controls.update();
+// Loop de animação (controls.update precisa ficar aqui dentro por causa do damping)
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene, camera);
+}
 
 const PALETTES = {
   standard: {
@@ -78,20 +77,21 @@ const PALETTES = {
 
 let currentPalette = PALETTES.standard;
 
-function getFaceMaterials(palette) {
-  // Ordem dos materiais no BoxGeometry: +X, -X, +Y, -Y, +Z, -Z
-  return [
-    new THREE.MeshStandardMaterial({ color: palette.R, roughness: 0.3 }), // Right
-    new THREE.MeshStandardMaterial({ color: palette.L, roughness: 0.3 }), // Left
-    new THREE.MeshStandardMaterial({ color: palette.U, roughness: 0.3 }), // Up
-    new THREE.MeshStandardMaterial({ color: palette.D, roughness: 0.3 }), // Down
-    new THREE.MeshStandardMaterial({ color: palette.F, roughness: 0.3 }), // Front
-    new THREE.MeshStandardMaterial({ color: palette.B, roughness: 0.3 }), // Back
-  ];
-}
+// Ordem dos materiais no BoxGeometry: +X, -X, +Y, -Y, +Z, -Z
+const FACE_ORDER = ["R", "L", "U", "D", "F", "B"];
+const FACE_NORMALS = {
+  R: new THREE.Vector3(1, 0, 0),
+  L: new THREE.Vector3(-1, 0, 0),
+  U: new THREE.Vector3(0, 1, 0),
+  D: new THREE.Vector3(0, -1, 0),
+  F: new THREE.Vector3(0, 0, 1),
+  B: new THREE.Vector3(0, 0, -1),
+};
+const INNER_COLOR = 0x111111; // faces internas (que não aparecem) ficam pretas
 
+// Construção do cubo (27 cubinhos)
 const CUBE_SIZE = 1;
-const CUBE_GAP = 0.05;
+const CUBE_GAP = 0.06;
 const OFFSET = CUBE_SIZE + CUBE_GAP;
 
 const cubeGroup = new THREE.Group();
@@ -100,16 +100,44 @@ scene.add(cubeGroup);
 const cubies = [];
 
 function createRubiksCube() {
+  // Miolo preto: preenche as frestas entre os cubinhos
+  const coreSize = 3 * CUBE_SIZE + 2 * CUBE_GAP - 0.02;
+  const core = new THREE.Mesh(
+    new THREE.BoxGeometry(coreSize, coreSize, coreSize),
+    new THREE.MeshStandardMaterial({ color: 0x050505, roughness: 0.9 }),
+  );
+  scene.add(core);
+
   const geometry = new THREE.BoxGeometry(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE);
-  const materials = getFaceMaterials(currentPalette);
 
   for (let x = -1; x <= 1; x++) {
     for (let y = -1; y <= 1; y++) {
       for (let z = -1; z <= 1; z++) {
+        // Quais faces deste cubinho estão voltadas para fora do cubo
+        const outer = {
+          R: x === 1,
+          L: x === -1,
+          U: y === 1,
+          D: y === -1,
+          F: z === 1,
+          B: z === -1,
+        };
+
+        // Cada cubinho tem seus próprios materiais (só as faces externas têm cor)
+        const materials = FACE_ORDER.map(
+          (face) =>
+            new THREE.MeshStandardMaterial({
+              color: outer[face] ? currentPalette[face] : INNER_COLOR,
+              roughness: 0.3,
+            }),
+        );
+
         const cubie = new THREE.Mesh(geometry, materials);
         cubie.position.set(x * OFFSET, y * OFFSET, z * OFFSET);
         cubie.userData = {
           initialPos: new THREE.Vector3(x * OFFSET, y * OFFSET, z * OFFSET),
+          // Letras das faces coloridas (adesivos) deste cubinho
+          stickers: FACE_ORDER.filter((face) => outer[face]),
         };
 
         cubeGroup.add(cubie);
@@ -121,6 +149,7 @@ function createRubiksCube() {
 
 createRubiksCube();
 
+// Rotação de faces (com animação suave)
 function getCubiesForFace(face) {
   const threshold = OFFSET * 0.5;
   return cubies.filter((cubie) => {
@@ -148,6 +177,16 @@ function getCubiesForFace(face) {
 
 let isAnimating = false;
 
+// Eixos escolhidos para que +90° seja sentido horário olhando de frente para a face
+const AXIS_MAP = {
+  U: new THREE.Vector3(0, -1, 0),
+  D: new THREE.Vector3(0, 1, 0),
+  R: new THREE.Vector3(-1, 0, 0),
+  L: new THREE.Vector3(1, 0, 0),
+  F: new THREE.Vector3(0, 0, -1),
+  B: new THREE.Vector3(0, 0, 1),
+};
+
 function rotateFace(
   face,
   angle = Math.PI / 2,
@@ -164,16 +203,7 @@ function rotateFace(
   // Anexa cubinhos ao pivô mantendo transformações
   faceCubies.forEach((cubie) => pivot.attach(cubie));
 
-  const axisMap = {
-    U: new THREE.Vector3(0, 1, 0),
-    D: new THREE.Vector3(0, -1, 0),
-    R: new THREE.Vector3(1, 0, 0),
-    L: new THREE.Vector3(-1, 0, 0),
-    F: new THREE.Vector3(0, 0, 1),
-    B: new THREE.Vector3(0, 0, -1),
-  };
-
-  const axis = axisMap[face];
+  const axis = AXIS_MAP[face];
   let startTime = null;
 
   function animateRotation(timestamp) {
@@ -190,7 +220,7 @@ function rotateFace(
       pivot.setRotationFromAxisAngle(axis, angle);
       pivot.updateMatrixWorld();
 
-      // Devolve cubinhos para a cena raiz e limpa o pivô
+      // Devolve cubinhos para o grupo do cubo e limpa o pivô
       faceCubies.forEach((cubie) => {
         cubeGroup.attach(cubie);
         // Ajuste de precisão para evitar arredondamentos numéricos
@@ -208,18 +238,36 @@ function rotateFace(
   requestAnimationFrame(animateRotation);
 }
 
+// Movimentos, embaralhar, resolver, resetar
 let moveCount = 0;
+
+// Histórico de movimentos 
+const moveHistory = [];
+
+function recordMove(face) {
+  moveHistory.push(face);
+  // 4 giros seguidos da mesma face não mudam nada: remove do histórico
+  const last4 = moveHistory.slice(-4);
+  if (last4.length === 4 && last4.every((f) => f === face)) {
+    moveHistory.splice(-4);
+  }
+}
+
+function updateMoveCounter() {
+  document.getElementById("move-count").innerText = moveCount;
+}
 
 function makeMove(face) {
   if (isAnimating) return;
   rotateFace(face, Math.PI / 2, 250, () => {
+    recordMove(face);
     moveCount++;
-    document.getElementById("move-count").innerText = moveCount;
+    updateMoveCounter();
     checkWinCondition();
   });
 }
 
-function scrambleCube(numMoves = 15) {
+function scrambleCube(numMoves = 20) {
   if (isAnimating) return;
   const faces = ["U", "D", "L", "R", "F", "B"];
   let currentMove = 0;
@@ -228,52 +276,115 @@ function scrambleCube(numMoves = 15) {
     if (currentMove < numMoves) {
       const randomFace = faces[Math.floor(Math.random() * faces.length)];
       rotateFace(randomFace, Math.PI / 2, 100, () => {
+        recordMove(randomFace);
         currentMove++;
         executeNextScrambleMove();
       });
     } else {
       moveCount = 0;
-      document.getElementById("move-count").innerText = moveCount;
+      updateMoveCounter();
     }
   }
   executeNextScrambleMove();
 }
 
+// Resolver: desfaz o histórico de trás para frente (giro de -90° em cada face)
+function solveCube() {
+  if (isAnimating) return;
+
+  function undoNextMove() {
+    if (moveHistory.length === 0) {
+      moveCount = 0;
+      updateMoveCounter();
+      return;
+    }
+    const face = moveHistory.pop();
+    rotateFace(face, -Math.PI / 2, 120, undoNextMove);
+  }
+  undoNextMove();
+}
+
+// Resetar: volta tudo ao estado inicial na hora (sem animação)
+function resetCube() {
+  if (isAnimating) return;
+  cubies.forEach((cubie) => {
+    cubie.position.copy(cubie.userData.initialPos);
+    cubie.quaternion.identity();
+  });
+  moveHistory.length = 0;
+  moveCount = 0;
+  updateMoveCounter();
+}
+
+// Detecção de vitória
+const _stickerDir = new THREE.Vector3();
+
 function checkWinCondition() {
   if (moveCount === 0) return;
-  const isSolved = cubies.every((cubie) => {
-    //verifica alinhamento de orientação dos cubies
-    const q = cubie.quaternion;
-    const isOriented =
-      Math.abs(q.w) > 0.99 ||
-      Math.abs(q.x) > 0.99 ||
-      Math.abs(q.y) > 0.99 ||
-      Math.abs(q.z) > 0.99;
 
-    return isOriented;
-  });
+  const isSolved = cubies.every((cubie) =>
+    cubie.userData.stickers.every((face) => {
+      _stickerDir.copy(FACE_NORMALS[face]).applyQuaternion(cubie.quaternion);
+      return _stickerDir.dot(FACE_NORMALS[face]) > 0.99;
+    }),
+  );
+
   if (isSolved) {
-    setTimeout(() => {
-      alert(`Parabéns você resolveu o cubo mágico em ${moveCount} movimentos!`);
-    }, 100);
+    moveHistory.length = 0;
+    showToast(`Parabéns! Você resolveu o cubo em ${moveCount} movimentos!`);
   }
+}
+
+let toastTimer = null;
+
+function showToast(message) {
+  const toast = document.getElementById("toast");
+  toast.textContent = message;
+  toast.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove("show"), 4500);
+}
+
+// Temas
+function hexString(color) {
+  return "#" + color.toString(16).padStart(6, "0");
+}
+
+// Pinta as cores da legenda com as cores do tema atual
+function updateLegendColors() {
+  document.querySelectorAll("[data-face]").forEach((chip) => {
+    const dot = chip.querySelector(".dot");
+    if (dot) dot.style.background = hexString(currentPalette[chip.dataset.face]);
+  });
 }
 
 function changeTheme(themeName) {
   if (!PALETTES[themeName]) return;
   currentPalette = PALETTES[themeName];
-  const newMaterials = getFaceMaterials(currentPalette);
 
-  cubies.forEach(cubie => {
-    cubie.material = newMaterials;
+  // Recolore só os adesivos de cada cubinho 
+  cubies.forEach((cubie) => {
+    cubie.userData.stickers.forEach((face) => {
+      const materialIndex = FACE_ORDER.indexOf(face);
+      cubie.material[materialIndex].color.setHex(currentPalette[face]);
+    });
   });
+
+  updateLegendColors();
 }
 
-window.addEventListener('keydown', (e) => {
+// Teclado
+window.addEventListener("keydown", (e) => {
+  // Evita disparar movimento em atalhos como Ctrl+R (recarregar)
+  if (e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
+
   const key = e.key.toUpperCase();
-  if (['U', 'D', 'L', 'R', 'F', 'B'].includes(key)) {
+  if (["U", "D", "L", "R", "F", "B"].includes(key)) {
     makeMove(key);
   }
 });
+
+updateLegendColors();
+animate();
 
 console.log("Cubo Mágico 3D Three.js inicializado com sucesso!");

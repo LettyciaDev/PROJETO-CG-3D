@@ -10,93 +10,271 @@
         padding: 0;
         box-sizing: border-box;
       }
+
       body {
         width: 100vw;
         height: 100vh;
         overflow: hidden;
-        background: #111;
-        font-family: sans-serif;
-      }
-      #canvas-container {
-        width: 100%;
-        height: 100%;
+        background: #0a0e17;
+        color: #e6e9f2;
+        font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
       }
 
-      #ui-container {
+      #canvas-container {
         position: absolute;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%);
+        inset: 0;
+      }
+
+      /* ---------- Painéis (estilo vidro escuro) ---------- */
+      .panel {
+        background: rgba(15, 20, 36, 0.85);
+        border: 1px solid #1f2842;
+        border-radius: 14px;
+        backdrop-filter: blur(8px);
+      }
+
+      #brand,
+      #hud {
+        position: absolute;
+        top: 12px;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 14px;
+      }
+
+      #brand {
+        left: 12px;
+      }
+
+      #hud {
+        right: 12px;
+        gap: 14px;
+      }
+
+      .logo {
+        display: grid;
+        place-items: center;
+      }
+
+      #brand h1 {
+        font-size: 16px;
+        font-weight: 700;
+        background: linear-gradient(90deg, #8b8cff, #c084fc);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+
+      #brand p {
+        font-size: 11px;
+        color: #8b93ad;
+        margin-top: 2px;
+      }
+
+      .label {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #9aa3bd;
+      }
+
+      #move-count {
+        font-size: 18px;
+        font-weight: 700;
+        color: #fbbf24;
+        min-width: 14px;
+      }
+
+      .divider {
+        width: 1px;
+        height: 24px;
+        background: #26304d;
+      }
+
+      select {
+        background: #141a2e;
+        color: #e6e9f2;
+        border: 1px solid #2a3556;
+        border-radius: 8px;
+        padding: 7px 10px;
+        font-size: 13px;
+        cursor: pointer;
+      }
+
+      /* ---------- Parte de baixo: legenda + ações ---------- */
+      #bottom {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 14px;
+        z-index: 10;
         display: flex;
         flex-direction: column;
         align-items: center;
         gap: 12px;
-        color: #fff;
-        z-index: 10;
+        padding: 0 12px;
+        pointer-events: none;
       }
 
-      .button-group {
+      #bottom > * {
+        pointer-events: auto;
+      }
+
+      #face-panel {
         display: flex;
-        gap: 8px;
         flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+        padding: 12px 18px;
       }
 
-      button {
-        background: rgba(255, 255, 255, 0.15);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        color: white;
-        padding: 8px 16px;
-        border-radius: 6px;
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        background: #141a2e;
+        color: #e6e9f2;
+        border: 1px solid #2a3556;
+        border-radius: 9px;
+        padding: 7px 12px;
+        font-size: 13px;
+        font-weight: 600;
         cursor: pointer;
-        backdrop-filter: blur(5px);
-        transition: all 0.2s ease;
+        transition: background 0.15s ease, transform 0.1s ease;
       }
 
-      button:hover {
-        background: rgba(255, 255, 255, 0.3);
+      .chip:hover {
+        background: #1d2647;
+      }
+
+      .chip:active {
+        transform: scale(0.96);
+      }
+
+      .dot {
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        border: 1px solid rgba(255, 255, 255, 0.35);
+      }
+
+      #actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: #141a2e;
+        color: #e6e9f2;
+        border: 1px solid #2a3556;
+        border-radius: 10px;
+        padding: 10px 18px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: filter 0.15s ease, transform 0.1s ease;
+      }
+
+      .btn:hover {
+        filter: brightness(1.25);
+      }
+
+      .btn:active {
+        transform: scale(0.97);
+      }
+
+      .btn.primary {
+        background: linear-gradient(135deg, #5b4cf0, #7c3aed);
+        border-color: transparent;
+        color: #fff;
+      }
+
+      #hint {
+        font-size: 12px;
+        color: #6b7491;
+        text-align: center;
+      }
+
+      /* ---------- Aviso de vitória ---------- */
+      #toast {
+        position: absolute;
+        top: 84px;
+        left: 50%;
+        transform: translate(-50%, -20px);
+        z-index: 20;
+        padding: 12px 20px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #059669, #10b981);
+        color: #fff;
+        font-weight: 700;
+        box-shadow: 0 8px 30px rgba(16, 185, 129, 0.35);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease, transform 0.3s ease;
+      }
+
+      #toast.show {
+        opacity: 1;
+        transform: translate(-50%, 0);
       }
     </style>
   </head>
   <body>
     <div id="canvas-container"></div>
-    <style>
-      #ui-container {
-        position: absolute;
-        top: 20px;
-        left: 20px;
-        z-index: 10;
-        color: white;
-      }
 
-      #stats {
-        margin-bottom: 15px;
-        font-size: 18px;
-      }
-
-      #controls-panel {
-        display: flex;
-        gap: 8px;
-      }
-
-      #controls-panel button {
-        padding: 12px 18px;
-        cursor: pointer;
-        border: none;
-        border-radius: 5px;
-        font-size: 16px;
-      }
-    </style>
-    <!-- Adicionado ao index.html -->
-    <div id="ui-container">
-      <div id="stats">Movimentos: <span id="move-count">0</span></div>
-      <div id="controls-panel">
-        <button onclick="makeMove('U')">U</button>
-        <button onclick="makeMove('D')">D</button>
-        <button onclick="makeMove('L')">L</button>
-        <button onclick="makeMove('R')">R</button>
-        <button onclick="makeMove('F')">F</button>
-        <button onclick="makeMove('B')">B</button>
+    <!-- Título -->
+    <header id="brand" class="panel">
+      <div class="logo">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#8b8cff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 8l-9-5-9 5v8l9 5 9-5V8z" />
+          <path d="M3 8l9 5 9-5M12 13v8" />
+        </svg>
       </div>
+      <div>
+        <h1>Cubo Mágico 3D</h1>
+        <p>Simulador Interativo Three.js</p>
+      </div>
+    </header>
+
+    <!-- Contador + tema -->
+    <div id="hud" class="panel">
+      <div><span class="label">Movimentos:</span> <span id="move-count">0</span></div>
+      <span class="divider"></span>
+      <select id="theme-select" onchange="changeTheme(this.value)">
+        <option value="standard">Tema Padrão</option>
+        <option value="neon">Tema Neon</option>
+        <option value="pastel">Tema Pastel</option>
+      </select>
+    </div>
+
+    <div id="toast"></div>
+
+    <!-- Legenda das faces (clicar gira a face) + ações -->
+    <div id="bottom">
+      <div id="face-panel" class="panel">
+        <button class="chip" data-face="U" onclick="makeMove('U')"><i class="dot"></i>Topo (U)</button>
+        <button class="chip" data-face="D" onclick="makeMove('D')"><i class="dot"></i>Base (D)</button>
+        <button class="chip" data-face="L" onclick="makeMove('L')"><i class="dot"></i>Esquerda (L)</button>
+        <button class="chip" data-face="R" onclick="makeMove('R')"><i class="dot"></i>Direita (R)</button>
+        <button class="chip" data-face="F" onclick="makeMove('F')"><i class="dot"></i>Frontal (F)</button>
+        <button class="chip" data-face="B" onclick="makeMove('B')"><i class="dot"></i>Traseira (B)</button>
+      </div>
+
+      <div id="actions">
+        <button class="btn primary" onclick="scrambleCube()">⇄ Embaralhar</button>
+        <button class="btn" onclick="solveCube()">✓ Resolver</button>
+        <button class="btn" onclick="resetCube()">↺ Resetar</button>
+      </div>
+
+      <div id="hint">Arraste para girar a câmera. Você também pode usar as teclas U, D, L, R, F e B.</div>
     </div>
 
     <!-- Three.js e OrbitControls -->
