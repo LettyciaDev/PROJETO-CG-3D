@@ -31,7 +31,7 @@ controls.minDistance = 6;
 controls.maxDistance = 20;
 
 // Iluminação
-scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+scene.add(new THREE.AmbientLight(0xffffff, 0.9)); // um pouco mais forte para uniformizar
 
 const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.8);
 dirLight1.position.set(10, 20, 15);
@@ -87,7 +87,7 @@ const FACE_NORMALS = {
   F: new THREE.Vector3(0, 0, 1),
   B: new THREE.Vector3(0, 0, -1),
 };
-const INNER_COLOR = 0x111111; // faces internas (que não aparecem) ficam pretas
+const INNER_COLOR = 0x2a2a2a; // faces internas: cinza escuro, bem diferente do fundo da cena
 
 // Construção do cubo (27 cubinhos)
 const CUBE_SIZE = 1;
@@ -100,11 +100,13 @@ scene.add(cubeGroup);
 const cubies = [];
 
 function createRubiksCube() {
-  // Miolo preto: preenche as frestas entre os cubinhos
-  const coreSize = 3 * CUBE_SIZE + 2 * CUBE_GAP - 0.02;
+  // Miolo ESFÉRICO: preenche o interior do cubo (e as frestas entre as camadas)
+  // sem nunca vazar para fora das peças que giram. Uma esfera é igual vista
+  // de qualquer ângulo, então a rotação de uma camada não a expõe.
+  // Raio 1.5 < 1.56 (metade do cubo), então fica sempre escondida pelos adesivos.
   const core = new THREE.Mesh(
-    new THREE.BoxGeometry(coreSize, coreSize, coreSize),
-    new THREE.MeshStandardMaterial({ color: 0x050505, roughness: 0.9 }),
+    new THREE.SphereGeometry(1.5, 32, 32),
+    new THREE.MeshStandardMaterial({ color: 0x1c1c1c, roughness: 1, metalness: 0 }),
   );
   scene.add(core);
 
@@ -128,7 +130,8 @@ function createRubiksCube() {
           (face) =>
             new THREE.MeshStandardMaterial({
               color: outer[face] ? currentPalette[face] : INNER_COLOR,
-              roughness: 0.3,
+              roughness: 1, // 1 = totalmente fosco, sem reflexo
+              metalness: 0, // sem efeito metálico
             }),
         );
 
@@ -241,7 +244,7 @@ function rotateFace(
 // Movimentos, embaralhar, resolver, resetar
 let moveCount = 0;
 
-// Histórico de movimentos 
+// Histórico de movimentos
 const moveHistory = [];
 
 function recordMove(face) {
@@ -362,7 +365,7 @@ function changeTheme(themeName) {
   if (!PALETTES[themeName]) return;
   currentPalette = PALETTES[themeName];
 
-  // Recolore só os adesivos de cada cubinho 
+  // Recolore só os adesivos de cada cubinho
   cubies.forEach((cubie) => {
     cubie.userData.stickers.forEach((face) => {
       const materialIndex = FACE_ORDER.indexOf(face);

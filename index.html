@@ -33,44 +33,17 @@
         backdrop-filter: blur(8px);
       }
 
-      #brand,
+      /* Contador + tema, centralizado no topo */
       #hud {
         position: absolute;
         top: 12px;
+        left: 50%;
+        transform: translateX(-50%);
         z-index: 10;
         display: flex;
         align-items: center;
-        gap: 12px;
-        padding: 10px 14px;
-      }
-
-      #brand {
-        left: 12px;
-      }
-
-      #hud {
-        right: 12px;
         gap: 14px;
-      }
-
-      .logo {
-        display: grid;
-        place-items: center;
-      }
-
-      #brand h1 {
-        font-size: 16px;
-        font-weight: 700;
-        background: linear-gradient(90deg, #8b8cff, #c084fc);
-        -webkit-background-clip: text;
-        background-clip: text;
-        color: transparent;
-      }
-
-      #brand p {
-        font-size: 11px;
-        color: #8b93ad;
-        margin-top: 2px;
+        padding: 10px 14px;
       }
 
       .label {
@@ -229,20 +202,6 @@
   </head>
   <body>
     <div id="canvas-container"></div>
-
-    <!-- Título -->
-    <header id="brand" class="panel">
-      <div class="logo">
-        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#8b8cff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 8l-9-5-9 5v8l9 5 9-5V8z" />
-          <path d="M3 8l9 5 9-5M12 13v8" />
-        </svg>
-      </div>
-      <div>
-        <h1>Cubo Mágico 3D</h1>
-        <p>Simulador Interativo Three.js</p>
-      </div>
-    </header>
 
     <!-- Contador + tema -->
     <div id="hud" class="panel">
