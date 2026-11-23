@@ -325,11 +325,13 @@ const _stickerDir = new THREE.Vector3();
 function checkWinCondition() {
   if (moveCount === 0) return;
 
-  const isSolved = cubies.every((cubie) =>
-    cubie.userData.stickers.every((face) => {
-      _stickerDir.copy(FACE_NORMALS[face]).applyQuaternion(cubie.quaternion);
-      return _stickerDir.dot(FACE_NORMALS[face]) > 0.99;
-    }),
+  const isSolved = cubies.every(
+    (cubie) =>
+      cubie.position.distanceTo(cubie.userData.initialPos) < 0.01 &&
+      cubie.userData.stickers.every((face) => {
+        _stickerDir.copy(FACE_NORMALS[face]).applyQuaternion(cubie.quaternion);
+        return _stickerDir.dot(FACE_NORMALS[face]) > 0.99;
+      }),
   );
 
   if (isSolved) {
